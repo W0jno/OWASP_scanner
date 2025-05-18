@@ -1,32 +1,34 @@
 from pydantic import BaseModel, EmailStr, SecretStr, Field
+from typing import Optional
 
-class UserCreate(BaseModel):
+""" class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
-    password: SecretStr = Field(..., min_length=8)
+    password: str = Field(..., min_length=8)
 
 class UserOut(BaseModel):
     id: int
     username: str
     email: EmailStr
-    password: SecretStr
+    password: str # should be hashed in the database
     class Config:
-        orm_mode = True
+        orm_mode = True """
 
 class ScanCreate(BaseModel):
-    user_id: int
+    #user_id: int
     url: str = Field(..., min_length=5, max_length=200)
-    status: str = Field(..., min_length=3, max_length=50)
-    result: str = Field(..., min_length=3, max_length=2000)
+    status: Optional[str] = Field(..., min_length=3, max_length=50)
+    result: Optional[str] = Field(..., max_length=2000)
 
 class ScanOut(BaseModel):
     id: int
-    user_id: int
+    #user_id: int
     url: str
-    status: str
-    result: str
+    status: Optional[str]
+    result: Optional[str]
     class Config:
         orm_mode = True
+
 
 class VulnerabilityCreate(BaseModel):
     scan_id: int

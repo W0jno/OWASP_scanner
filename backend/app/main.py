@@ -1,12 +1,15 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from db.database import SessionLocal, engine
-import db.models, db.schemas
+from db import models
+from db import schemas
+from app.scan import start_scan
 
 
 app = FastAPI()
 
-db.models.Base.metadata.create_all(bind=engine)
+models.Base.metadata.create_all(bind=engine)
 
 def get_db():
     db = SessionLocal()
@@ -19,21 +22,53 @@ def get_db():
 def read_root():
     return {"message": "dupa"}
 
-@app.post("/users/", response_model=db.schemas.UserOut)
-def create_user(user: db.schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(db.models.User).filter(db.models.User.username == user.username).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
-    db_user = db.models.User(**user.dict())
-    db.add(db_user)
+
+@app.delete("/scans/all", response_model=schemas.ScanOut)
+def delete_scans(db: Session = Depends(get_db)):
+    db.query(models.Scan).delete()
     db.commit()
-    db.refresh(db_user)
-    return db_user
+    db.execute(text("ALTER SEQUENCE scans_id_seq RESTART WITH 1;"))
+    db.commit()
+    return {"message": "All scans deleted"}
 
 
-@app.get("/users/{user_id}", response_model=db.schemas.UserOut)
-def read_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(db.models.User).filter(db.models.User.id == user_id).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+@app.post("/scans", response_model=schemas.ScanOut)
+def create_scan(
+    scan: schemas.ScanCreate,
+    db: Session = Depends(get_db)
+):
+    site_to_scan = scan.url.lower()
+
+    if not site_to_scan.startswith("https://") and not site_to_scan.startswith("http://"):
+        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
+
+    db_scan = models.Scan(**scan.dict())
+    db.add(db_scan)
+    db.flush()
+    vulns = start_scan(site_to_scan, db_scan)
+    # Save vulnerabilities and build result summary
+    result_lines = []
+    for vuln in vulns:
+        db_vuln = models.Vulnerability(**vuln.dict())
+        db.add(db_vuln)
+        db.commit()
+        db.refresh(db_vuln)
+        result_lines.append(
+            f"- [{db_vuln.severity.upper()}] {db_vuln.vulnerability_type}: {db_vuln.description}"
+        )
+
+    # Update scan result field
+    db_scan.result = "\n".join(result_lines)
+    db.commit()
+    db.refresh(db_scan)
+    return db_scan
+
+@app.get("/scans/all", response_model=list[schemas.ScanOut])
+def read_scans(db: Session = Depends(get_db)):
+    scans = db.query(models.Scan).all()
+    return scans
+
+@app.get("/vulnerabilities/all", response_model=list[schemas.VulnerabilityOut])
+def read_vulnerabilities(db: Session = Depends(get_db)):
+    vulnerabilities = db.query(models.Vulnerability).all()
+    return vulnerabilities

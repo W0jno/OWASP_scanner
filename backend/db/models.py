@@ -1,26 +1,23 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from .database import Base
 
-class User(Base):
+""" class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    password = Column(String)
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    password = Column(String) """
 
 class Scan(Base):
     __tablename__ = "scans"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    url = Column(String)
-    status = Column(String)
-    result = Column(String)
+    #user_id = Column(Integer, ForeignKey("users.id"))
+    url = Column(String, nullable=False)
+    status = Column(String, nullable=True)
+    result = Column(String, nullable=True)
     created_at = Column(DateTime)
-    updated_at = Column(DateTime)
 
 class Vulnerability(Base):
     __tablename__ = "vulnerabilities"
@@ -31,4 +28,3 @@ class Vulnerability(Base):
     description = Column(String)
     severity = Column(String)
     created_at = Column(DateTime)
-    updated_at = Column(DateTime)
