@@ -67,7 +67,7 @@ def scan_sqli_forms(url):
                     }
             except Exception as e:
                 print(f"[!] An error has occurred with payload: {e}")
-            # Remove duplicate entries for the same input in raport
+
     remove_duplicate_inputs(raport)
     return raport
 

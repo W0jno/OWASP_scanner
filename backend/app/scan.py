@@ -59,7 +59,7 @@ def start_scan(url: str, db):
                 schemas.VulnerabilityCreate(
                     scan_id=db.id,
                     vulnerability_type="SQL injection",
-                    description=f"TThe target URL is vulnerable to SQL injection",
+                    description=f"The target URL is vulnerable to SQL injection",
                     severity="High"
                 )
             )
