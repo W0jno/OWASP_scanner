@@ -22,6 +22,9 @@ def get_db():
 def read_root():
     return {"message": "dupa"}
 
+"""
+SCANS ENDPOINTS
+"""
 
 @app.delete("/scans/all", response_model=schemas.ScanOut)
 def delete_scans(db: Session = Depends(get_db)):
@@ -39,13 +42,12 @@ def create_scan(
 ):
     site_to_scan = scan.url.lower()
 
-    if not site_to_scan.startswith("https://") and not site_to_scan.startswith("http://"):
-        raise HTTPException(status_code=400, detail="URL must start with http:// or https://")
-
+    # Check if the site is already scanned
     db_scan = models.Scan(**scan.dict())
     db.add(db_scan)
     db.flush()
     vulns = start_scan(site_to_scan, db_scan)
+
     # Save vulnerabilities and build result summary
     result_lines = []
     for vuln in vulns:
@@ -68,7 +70,20 @@ def read_scans(db: Session = Depends(get_db)):
     scans = db.query(models.Scan).all()
     return scans
 
+
+"""
+VULNERABILITIES ENDPOINTS
+"""
+
 @app.get("/vulnerabilities/all", response_model=list[schemas.VulnerabilityOut])
 def read_vulnerabilities(db: Session = Depends(get_db)):
     vulnerabilities = db.query(models.Vulnerability).all()
     return vulnerabilities
+
+@app.delete("/vulnerabilities/all", response_model=schemas.VulnerabilityOut)
+def delete_vulnerabilities(db: Session = Depends(get_db)):
+    db.query(models.Vulnerability).delete()
+    db.commit()
+    db.execute(text("ALTER SEQUENCE vulnerabilities_id_seq RESTART WITH 1;"))
+    db.commit()
+    return {"message": "All vulnerabilities deleted"}
