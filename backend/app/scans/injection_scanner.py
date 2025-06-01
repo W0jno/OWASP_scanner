@@ -57,10 +57,13 @@ def scan_sqli_params(url):
                 break;
         except Exception as e:
             print(f"[!] An error has occurred with payload: {e}")
-    #data to submit
     return raport
 
 def scan_sqli_forms(url):
+    """
+    Scanning website for sqli injection
+    """
+    
     raport = {}
     data = {}
     forms = get_all_forms(url)
@@ -95,6 +98,10 @@ def scan_sqli_forms(url):
     return raport
 
 def scan_xss(url):
+    """
+    Scanning website for XSS injection
+    """
+    print(f"[+] Testing XSS on {url}")
     raport = {}
     data = {}
     forms = get_all_forms(url)

@@ -1,5 +1,7 @@
 from app.scans.https_checker import check_https
 from app.scans.headers_checker import check_headers
+from app.scans.port_scanner import port_scanner
+from app.scans.path_fuzzer import path_fuzzer
 from app.scans.injection_scanner import scan_sqli_params, scan_sqli_forms, scan_xss
 from db import models
 from db import schemas
@@ -24,7 +26,9 @@ def start_scan(url: str, db):
     sqli_params_raport = scan_sqli_params(url)
     sqli_forms_raport = scan_sqli_forms(url)
     xss_forms_raport = scan_xss(url)
-    combined_raports = combine_all_raports(check_headers_raport, sqli_params_raport, sqli_forms_raport, xss_forms_raport)
+    port_raport = port_scanner(url)
+    path_fuzzer_raport = path_fuzzer(url);
+    combined_raports = combine_all_raports(check_headers_raport, sqli_params_raport, sqli_forms_raport, xss_forms_raport, port_raport, path_fuzzer_raport)
     header_names = {
     "Content-Security-Policy",
     "X-Content-Type-Options",
@@ -82,8 +86,26 @@ def start_scan(url: str, db):
                     severity="High"
                 )
             )
+        elif isinstance(value, dict) and value.get("message") == "Port is open":
+            vulnerabilities.append(
+                schemas.VulnerabilityCreate(
+                    scan_id=db.id,
+                    vulnerability_type="Open port",
+                    description=f"Port {value.get('port')} is open on the target system.",
+                    severity="High"
+                )
+            )
+        elif isinstance(value, dict) and value.get("message") == "Potential security misconfiguration detected":
+            vulnerabilities.append(
+                schemas.VulnerabilityCreate(
+                    scan_id=db.id,
+                    vulnerability_type="Potential security misconfiguration",
+                    description=f"Accessible sensitive path: {value.get('path')}",
+                    severity="Medium"
+                )
+            )
     return vulnerabilities
 
-def combine_all_raports(headers_rap, sqli_params_rap, sqli_forms_rap, xss_forms_rap):
-    combined_raport = {**headers_rap, **sqli_params_rap, **sqli_forms_rap, **xss_forms_rap}
+def combine_all_raports(headers_rap, sqli_params_rap, sqli_forms_rap, xss_forms_rap, port_rap, path_fuzzer_rap):
+    combined_raport = {**headers_rap, **sqli_params_rap, **sqli_forms_rap, **xss_forms_rap, **port_rap, **path_fuzzer_rap}
     return combined_raport
