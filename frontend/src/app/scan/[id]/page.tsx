@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+
 const parse_result = (res: string): object[] => {
   let res_to_return = [
     {

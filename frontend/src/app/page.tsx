@@ -17,43 +17,58 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const start_scan = async (url: string) => {
-  try {
-    const response = await fetch("http://localhost:8000/scans/start", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: url,
-        status: "pending",
-        result: "",
-      }),
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(error);
+  const response = await fetch("http://localhost:8000/scans/start", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      url: url,
+      status: "pending",
+      result: "",
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+
+  return await response.json();
 };
 
 export default function Home() {
   const [result, setResult] = useState<any[]>([]);
   const [inputUrl, setInputUrl] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
+  const refreshScans = async () => {
+    const res = await fetch("http://localhost:8000/scans/all");
+    const data = await res.json();
+    setResult(data);
+  };
 
   useEffect(() => {
-    fetch("http://localhost:8000/scans/all")
-      .then((res) => res.json())
-      .then((data) => {
-        setResult(data);
-      })
-      .catch((err) => console.error(err));
+    refreshScans().catch(console.error);
   }, []);
+
+  const handleScan = async () => {
+    if (!inputUrl) return;
+    setLoading(true);
+    try {
+      await start_scan(inputUrl);
+      await refreshScans();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <div></div>
@@ -70,20 +85,17 @@ export default function Home() {
               placeholder="https://example.com"
               value={inputUrl}
               onChange={(e) => setInputUrl(e.target.value)}
+              disabled={loading}
             />
-            <Button
-              type="button"
-              onClick={async () => {
-                if (!inputUrl) return;
-                await start_scan(inputUrl);
-                // Refresh the scan list after starting a scan
-                fetch("http://localhost:8000/scans/all")
-                  .then((res) => res.json())
-                  .then((data) => setResult(data))
-                  .catch((err) => console.error(err));
-              }}
-            >
-              Start scan
+            <Button type="button" onClick={handleScan} disabled={loading}>
+              {loading ? (
+                <div className="flex items-center">
+                  <Loader2 className="animate-spin mr-2 w-4 h-4" />
+                  Scanning...
+                </div>
+              ) : (
+                "Start scan"
+              )}
             </Button>
           </div>
         </CardContent>
