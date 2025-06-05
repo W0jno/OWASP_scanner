@@ -44,7 +44,7 @@ def delete_scans(db: Session = Depends(get_db)):
     return {"message": "All scans deleted"}
 
 
-@app.post("/scans", response_model=schemas.ScanOut)
+@app.post("/scans/start", response_model=schemas.ScanOut)
 def create_scan(
     scan: schemas.ScanCreate,
     db: Session = Depends(get_db)
@@ -79,6 +79,13 @@ def read_scans(db: Session = Depends(get_db)):
     scans = db.query(models.Scan).all()
     return scans
 
+@app.get("/scans/{id}", response_model=schemas.ScanOut)
+def read_scan(id: int, db: Session = Depends(get_db)):
+    scan = db.query(models.Scan).filter(models.Scan.id == id).first()
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    return scan
+
 
 """
 VULNERABILITIES ENDPOINTS
@@ -88,6 +95,8 @@ VULNERABILITIES ENDPOINTS
 def read_vulnerabilities(db: Session = Depends(get_db)):
     vulnerabilities = db.query(models.Vulnerability).all()
     return vulnerabilities
+
+
 
 @app.delete("/vulnerabilities/all", response_model=schemas.VulnerabilityOut)
 def delete_vulnerabilities(db: Session = Depends(get_db)):
