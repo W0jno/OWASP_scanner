@@ -26,8 +26,8 @@
 
 This project is structured into three main components:
 
-- **frontend/** – web UI built using TypeScript, HTML, and CSS.  
-- **backend/** – API and scan logic written in Python.  
+- **frontend/** – web UI built using TypeScript, React, shadcn, nextjs.  
+- **backend/** – API and scan logic written in Python with FastAPI.  
 - **db/** – database configuration and migrations.
 
 Everything is orchestrated using `docker-compose.yml` for quick setup and deployment using containers.
@@ -36,9 +36,9 @@ Everything is orchestrated using `docker-compose.yml` for quick setup and deploy
 
 ## Technologies
 
-- **Python** – backend logic and APIs  
-- **TypeScript**, **HTML**, **CSS** – frontend user interface  
-- **SQL** (e.g., PostgreSQL or SQLite) – database  
+- **Python**, **FastAPI** – backend logic and APIs  
+- **TypeScript**, **React**, **shadcn**, **nextjs** – frontend user interface  
+- **SQL** (PostgreSQL) – database  
 - **Docker & Docker Compose** – containerization  
 - **OWASP Top 10** – security scanning standards
 
@@ -66,11 +66,13 @@ Everything is orchestrated using `docker-compose.yml` for quick setup and deploy
    - The backend API  
    - The database
   
-    For frontend go to the /frontend folder, then:
-
+   For frontend go to the /frontend folder, then:
    ```bash
-   npm run dev
+   npm install
    ```
+   ```bash
+   pm run dev
+    ```
 
    This will start:
    - The frontend
