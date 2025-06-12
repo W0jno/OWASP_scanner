@@ -66,7 +66,7 @@ Everything is orchestrated using `docker-compose.yml` for quick setup and deploy
    - The backend API  
    - The database
   
-    For frontend go to the /fronted folder, then:
+    For frontend go to the /frontend folder, then:
 
    ```bash
    npm run dev
